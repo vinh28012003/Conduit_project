@@ -1,0 +1,139 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+model User {
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  token          String?
+  username       String   @unique @db.VarChar(255)
+  hashedPassword String
+  bio            String?
+  avatar         String? // URL or file path to avatar image
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  isFollowing    Boolean? @default(false)
+
+  // Relations
+  articles   Article[]   @relation("ArticleAuthor")
+  comments   Comment[]   @relation("CommentAuthor")
+  favourites Favourite[] @relation("UserFavourites")
+
+  // Following relationships
+  followers Follow[] @relation("UserFollowers")
+  following Follow[] @relation("UserFollowing")
+
+  @@map("user")
+}
+
+model Article {
+  id                  Int                  @id @default(autoincrement())
+  slug                String               @unique @db.VarChar(255)
+  title               String               @db.VarChar(255)
+  description         String               @db.VarChar(255)
+  body                String
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  authorId            Int                  @map("author_id")
+  isFavourite         Boolean?             @default(false)
+  // Relations
+  author              User                 @relation("ArticleAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  comments            Comment[]            @relation("ArticleComments")
+  favourites          Favourite[]          @relation("ArticleFavourites")
+  articleTagRelations ArticleTagRelation[] @relation("ArticleTags")
+
+  @@index([authorId])
+  @@index([slug])
+  @@index([createdAt])
+  @@map("article")
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  body      String
+  authorId  Int      @map("author_id")
+  articleId Int      @map("article_id")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  author  User    @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  article Article @relation("ArticleComments", fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([articleId])
+  @@index([createdAt])
+  @@map("comment")
+}
+
+model Tag {
+  id   Int    @id @default(autoincrement())
+  name String @unique @db.VarChar(255)
+
+  // Relations
+  articleTagRelations ArticleTagRelation[] @relation("TagArticles")
+
+  @@map("tag")
+}
+
+model ArticleTagRelation {
+  id        Int @id @default(autoincrement())
+  tagId     Int @map("tag_id")
+  articleId Int @map("article_id")
+
+  // Relations
+  tag     Tag     @relation("TagArticles", fields: [tagId], references: [id], onDelete: Cascade)
+  article Article @relation("ArticleTags", fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([tagId, articleId])
+  @@index([tagId])
+  @@index([articleId])
+  @@map("article_tag_relation")
+}
+
+model Favourite {
+  id        Int @id @default(autoincrement())
+  userId    Int @map("user_id")
+  articleId Int @map("article_id")
+
+  // Relations
+  user    User    @relation("UserFavourites", fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation("ArticleFavourites", fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@index([userId])
+  @@index([articleId])
+  @@map("favourite")
+}
+
+// Combined follower/following relationship
+// Note: Your ERD had separate follower and following tables, but typically
+// this is modeled as a single table with both follower and following IDs
+model Follow {
+  id          Int @id @default(autoincrement())
+  followerId  Int @map("follower_id")
+  followingId Int @map("following_id")
+
+  // Relations
+  follower  User @relation("UserFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follow")
+}

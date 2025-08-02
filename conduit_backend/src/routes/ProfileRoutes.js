@@ -12,6 +12,6 @@ const profileRouter = express.Router();
 profileRouter.get("/:username", getUserProfile);
 
 // Follow and unfollow routes
-userRouter.post("/:username/follow", followUser);
-userRouter.delete("/:username/follow", unfollowUser);
+profileRouter.post("/:username/follow", followUser);
+profileRouter.delete("/:username/follow", unfollowUser);
 export default profileRouter;

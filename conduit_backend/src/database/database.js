@@ -1,9 +1,9 @@
-const { PrismaClient } = require("@prisma/client");
-require("dotenv").config();
+import { PrismaClient } from "@prisma/client";
+import "dotenv/config";
 
-const prisma = new PrismaClient();
+export const prisma = new PrismaClient();
 
-const connectDB = async () => {
+export const connectDB = async () => {
   try {
     await prisma.$connect();
     console.log("Connected to the database successfully");
@@ -13,7 +13,7 @@ const connectDB = async () => {
   }
 };
 
-const disconnectDB = async () => {
+export const disconnectDB = async () => {
   try {
     await prisma.$disconnect();
     console.log("Disconnected from the database successfully");
@@ -21,10 +21,4 @@ const disconnectDB = async () => {
     console.error("Error disconnecting from the database:", error);
     throw error;
   }
-};
-
-module.exports = {
-  prisma,
-  connectDB,
-  disconnectDB,
 };

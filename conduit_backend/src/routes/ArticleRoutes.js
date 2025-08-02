@@ -1,4 +1,22 @@
 import express from "express";
+import {
+  getAllArticles,
+  getArticleBySlug,
+  getAllTags,
+  createArticle,
+  getFeedArticles,
+  updateArticle,
+  deleteArticle,
+} from "../controllers/article/ArticleController.js";
+import {
+  createComment,
+  getCommentsForArticle,
+  updateComment,
+} from "../controllers/article/CommentController.js";
+import {
+  favoriteArticle,
+  deleteFavorite,
+} from "../controllers/article/FavouriteController.js";
 
 const articleRouter = express.Router();
 
@@ -8,7 +26,7 @@ articleRouter.get("/", getAllArticles);
 //get article by id
 articleRouter.get("/:slug", getArticleBySlug);
 //get all tags
-articleRouter.get("/tags", getTags);
+articleRouter.get("/tags", getAllTags);
 
 //authentication required routes
 //articleRouter.use(authenticateToken);
@@ -29,7 +47,7 @@ articleRouter.delete("/:slug", deleteArticle);
 // articleRouter.get("/author/:id", getArticlesByAuthor);
 
 // add user's comment routes
-articleRouter.post("/:slug/comments", addComment);
+articleRouter.post("/:slug/comments", createComment);
 
 //get all comments for an article with pagination
 articleRouter.get("/:slug/comments", getCommentsForArticle);

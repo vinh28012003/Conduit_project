@@ -28,10 +28,10 @@ export const getAllArticles = async (req, res) => {
     const { tag, author, favorited, limit = 20, offset = 0 } = req.query;
 
     // Convert limit and offset to integers and validate
-    const parsedLimit = Math.min(parseInt(limit) || 20, 100); // Max 100 articles
+    const parsedLimit = Math.min(parseInt(limit) || 20, 20); // Max 100 articles
     const parsedOffset = parseInt(offset) || 0;
 
-    // Build dynamic where clause based on query parameters
+    // Build dynamic where clause
     const whereClause = {};
 
     // Filter by tag
@@ -210,3 +210,53 @@ export const deleteArticle = async (req, res) => {
   }
 };
 export const getFeedArticles = async (req, res) => {
+  try {
+    const { limit = 20, offset = 0 } = req.query;
+    const parsedLimit = Math.min(parseInt(limit) || 20, 100);
+    const parsedOffset = parseInt(offset) || 0;
+    const followedUsers = await prisma.follow.findMany({
+      where: {
+        followerId: req.user.id,
+      },
+    });
+    const articles = await prisma.article.findMany({
+      where: {
+        authorId: {
+          in: followedUsers.map((follow) => follow.followingId),
+        },
+      },
+      include: {
+        author: {
+          select: {
+            username: true,
+            bio: true,
+            avatar: true,
+            following: true,
+          },
+        },
+        articleTagRelations: {
+          include: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        tag: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      skip: parsedOffset,
+      take: parsedLimit,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

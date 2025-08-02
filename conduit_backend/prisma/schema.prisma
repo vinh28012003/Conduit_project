@@ -50,6 +50,7 @@ model Article {
   updatedAt           DateTime             @updatedAt
   authorId            Int                  @map("author_id")
   isFavourite         Boolean?             @default(false)
+  favoriteCount       Int                  @default(0)
   // Relations
   author              User                 @relation("ArticleAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   comments            Comment[]            @relation("ArticleComments")
